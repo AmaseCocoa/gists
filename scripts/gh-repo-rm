@@ -15,24 +15,30 @@ echo "Fetching repositories for @${USERNAME}..."
 
 repo_json=$(gh repo list "$USERNAME" --limit 1000 --json nameWithOwner,isEmpty,description)
 
-initial_selections=$(echo "$repo_json" | jq -r '
-  to_entries | map(select(.value.isEmpty == true) | .key) | join(",")
-')
+formatted_list=$(echo "$repo_json" | jq -r '
+  .[] 
+  | if .isEmpty == true then "[EMPTY] " + .nameWithOwner else .nameWithOwner end
+' | sort -r)
 
-repos=$(echo "$repo_json" | jq -r '.[] | .nameWithOwner' \
+selected_items=$(echo "$formatted_list" \
   | fzf -m \
     --height=60% \
     --layout=reverse \
     --border \
     --header="[Tab] Select/Deselect / [Enter] Confirm" \
     --preview-window="right:50%:wrap" \
-    --preview="echo '$repo_json' | jq -r --arg name {} '.[] | select(.nameWithOwner == \$name) | \"■ Description\\n\\n\" + (.description // \"(No description)\")'" \
-    --pre-select-items="$initial_selections")
+    --preview="
+      name=\$(echo {} | sed 's/^\[EMPTY\] //')
+      echo '$repo_json' | jq -r --arg name \"\$name\" '.[] | select(.nameWithOwner == \$name) | \"■ Description\\\\n\\\\n\" + (.description // \"(No description)\")'
+    " \
+    --bind "load:execute-silent(echo '[EMPTY]')+change-query+select-all+clear-query")
 
-if [ -z "$repos" ]; then
+if [ -z "$selected_items" ]; then
   echo "Canceled."
   exit 0
 fi
+
+repos=$(echo "$selected_items" | sed 's/^\[EMPTY\] //')
 
 echo ""
 echo "The following repositories will be DELETED:"
