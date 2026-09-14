@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${BIN_DIR}/.." && pwd)"
+SCRIPTS_DIR="${REPO_ROOT}/scripts"
+
+# Command: update
+if [[ "${1:-}" == "update" ]]; then
+    echo "Updating repository..."
+    git -C "${REPO_ROOT}" pull origin "$(git -C "${REPO_ROOT}" rev-parse --abbrev-ref HEAD)"
+    echo "Done."
+    exit 0
+fi
+
+if [[ ! -d "${SCRIPTS_DIR}" ]]; then
+    echo "Error: '${SCRIPTS_DIR}' directory not found." >&2
+    exit 1
+fi
+
+cd "${SCRIPTS_DIR}"
+
+# Find all executable files in scripts/ (handles both macOS and Linux)
+mapfile -t ALL_TOOLS < <(
+    find . -maxdepth 1 -type f \( -perm -100 -o -perm -010 -o -perm -001 \) ! -name '.*' | sed 's|^\./||' | sort
+)
+
+if [[ ${#ALL_TOOLS[@]} -eq 0 ]]; then
+    echo "No executable tools found in scripts/"
+    exit 0
+fi
+
+SELECTED=()
+
+if command -v fzf >/dev/null 2>&1; then
+    FZF_INPUT=""
+    for tool in "${ALL_TOOLS[@]}"; do
+        FZF_INPUT+="${tool}"$'\n'
+    done
+
+    while IFS= read -r line; do
+        [[ -n "${line}" ]] && SELECTED+=("${line}")
+    done < <(
+        printf '%s' "${FZF_INPUT}" | fzf --multi \
+            --header="Select tools to enable (TAB: select, Enter: confirm)" \
+            --preview="test -L '${BIN_DIR}/{}' && echo '[Enabled]' || echo '[Disabled]'"
+    )
+else
+    echo "fzf not found. Falling back to basic selection."
+    echo "Enter numbers separated by space (e.g., 1 3):"
+
+    for i in "${!ALL_TOOLS[@]}"; do
+        status="[ ]"
+        [[ -L "${BIN_DIR}/${ALL_TOOLS[$i]}" ]] && status="[x]"
+        echo "  $((i+1))) ${status} ${ALL_TOOLS[$i]}"
+    done
+
+    read -rp "Selection: " -a INDEXES
+    for idx in "${INDEXES[@]}"; do
+        if [[ "${idx}" =~ ^[0-9]+$ ]] && (( idx >= 1 && idx <= ${#ALL_TOOLS[@]} )); then
+            SELECTED+=("${ALL_TOOLS[$((idx-1))]}")
+        fi
+    done
+fi
+
+echo "Updating symlinks in ${BIN_DIR}..."
+
+declare -A IS_SELECTED
+for tool in "${SELECTED[@]}"; do
+    IS_SELECTED["${tool}"]=1
+done
+
+for tool in "${ALL_TOOLS[@]}"; do
+    target_link="${BIN_DIR}/${tool}"
+    script_path="${SCRIPTS_DIR}/${tool}"
+
+    if [[ -n "${IS_SELECTED["${tool}"]:-}" ]]; then
+        if [[ ! -L "${target_link}" ]]; then
+            ln -sf "${script_path}" "${target_link}"
+            echo "  + Enabled: ${tool}"
+        fi
+    else
+        if [[ -L "${target_link}" ]]; then
+            rm -f "${target_link}"
+            echo "  - Disabled: ${tool}"
+        fi
+    fi
+done
+
+echo "Done."
