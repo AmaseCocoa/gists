@@ -1,0 +1,21 @@
+{
+    "description": "gistsです",
+    "script_root": "./scripts",
+    "scripts": {
+        "gi": {
+            "type": "shell_script",
+            "description": "gitignoreを自動生成するscript",
+            "path": "gi"
+        },
+        "dvi": {
+            "type": "shell_script",
+            "description": "direnvとdevboxを同時にセットアップするだけのショートカット",
+            "path": "dvi"
+        },
+        "license": {
+            "type": "shell_script",
+            "description": "年やgitのuser.nameとテンプレートからLICENSEを自動生成するツール",
+            "path": "license"
+        },
+    }
+}
