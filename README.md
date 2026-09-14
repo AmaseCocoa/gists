@@ -1,9 +1,9 @@
-# Cocoa Gists
+# gists
 使えそうなスクリプトを保存しているだけのリポジトリ。
 
 ## Install
 macOS/Linuxのみ対応
 
 ```
-curl -fsSL https://raw.githubusercontent.com/AmaseCocoa/cocoa-useful-scripts/refs/heads/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/AmaseCocoa/gists/refs/heads/main/install.sh | bash
 ```
