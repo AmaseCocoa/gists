@@ -38,29 +38,16 @@ get_description() {
 SELECTED=()
 
 if command -v fzf >/dev/null 2>&1; then
-    INITIAL_SELECTED=()
+    FZF_INPUT=""
     for tool in "${ALL_TOOLS[@]}"; do
-        if [[ -L "${BIN_DIR}/${tool}" ]]; then
-            INITIAL_SELECTED+=("${tool}")
-        fi
+        FZF_INPUT+="${tool}"$'\n'
     done
-
-    FZF_BIND_ARGS=()
-    if [[ ${#INITIAL_SELECTED[@]} -gt 0 ]]; then
-        PRESELECT_PATTERN=$(printf "%s\n" "${INITIAL_SELECTED[@]}")
-        FZF_BIND_ARGS=(
-            --sync
-            --bind "load:select-multiple(${PRESELECT_PATTERN})+first"
-        )
-    fi
 
     while IFS= read -r line; do
         [[ -n "${line}" ]] && SELECTED+=("${line}")
     done < <(
-        printf '%s\n' "${ALL_TOOLS[@]}" | fzf --multi \
-            "${FZF_BIND_ARGS[@]}" \
-            --header="Select tools to enable (TAB: toggle, Enter: confirm)" \
-            --bind "tab:toggle+down" \
+        printf '%s' "${FZF_INPUT}" | fzf --multi \
+            --header="Select tools to enable (TAB: select, Enter: confirm)" \
             --preview-window="wrap" \
             --preview="
                 tool='{}'
@@ -74,7 +61,7 @@ if command -v fzf >/dev/null 2>&1; then
                 fi
                 echo '----------------------------------------'
                 echo -n 'Description: '
-                grep -i '^# *DESCRIPTION:' \"\$script\" | head -n 1 | sed -E 's/^# *DESCRIPTION: *//i' || echo 'No Description'
+                grep -i '^# *DESCRIPTION:' \"\$script\" | head -n 1 | sed -E 's/^# *DESCRIPTION: *//i' || echo '説明なし'
             "
     )
 else
