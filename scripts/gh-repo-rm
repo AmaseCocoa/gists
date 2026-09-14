@@ -2,22 +2,41 @@
 
 set -euo pipefail
 
-for cmd in gh fzf; do
+for cmd in gh fzf jq; do
   if ! command -v "$cmd" &> /dev/null; then
     echo "Error: $cmd is not installed." >&2
     exit 1
   fi
 done
 
-repos=$(gh repo list --limit 1000 --json nameWithOwner --jq '.[].nameWithOwner' \
-  | fzf -m --height=40% --layout=reverse --border --header="[Tab] Select multiple / [Enter] Confirm")
+USERNAME=$(gh api user --jq '.login')
+
+echo "Fetching repositories for @${USERNAME}..."
+
+repo_json=$(gh repo list "$USERNAME" --limit 1000 --json nameWithOwner,isEmpty,description)
+
+initial_selections=$(echo "$repo_json" | jq -r '
+  to_entries | map(select(.value.isEmpty == true) | .key) | join(",")
+')
+
+repos=$(echo "$repo_json" | jq -r '.[] | .nameWithOwner' \
+  | fzf -m \
+    --height=60% \
+    --layout=reverse \
+    --border \
+    --header="[Tab] Select/Deselect / [Enter] Confirm" \
+    --preview-window="right:50%:wrap" \
+    --preview="echo '$repo_json' | jq -r --arg name {} '.[] | select(.nameWithOwner == \$name) | \"■ Description\\n\\n\" + (.description // \"(No description)\")'" \
+    --pre-select-items="$initial_selections")
 
 if [ -z "$repos" ]; then
   echo "Canceled."
   exit 0
 fi
 
+echo ""
 echo "The following repositories will be DELETED:"
+echo "----------------------------------------"
 echo "$repos"
 echo "----------------------------------------"
 
