@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+for cmd in gh fzf; do
+  if ! command -v "$cmd" &> /dev/null; then
+    echo "Error: $cmd is not installed." >&2
+    exit 1
+  fi
+done
+
+repos=$(gh repo list --limit 1000 --json fullName --jq '.[].fullName' \
+  | fzf -m --height=40% --layout=reverse --border --header="[Tab] Select multiple / [Enter] Confirm")
+
+if [ -z "$repos" ]; then
+  echo "Canceled."
+  exit 0
+fi
+
+echo "The following repositories will be DELETED:"
+echo "$repos"
+echo "----------------------------------------"
+
+printf "Are you sure? (y/N): "
+read -r answer < /dev/tty
+
+if [[ "$answer" =~ ^[Yy]$ ]]; then
+  echo "$repos" | while read -r repo; do
+    echo "Deleting: $repo ..."
+    gh repo delete "$repo" --yes
+  done
+  echo "Done."
+else
+  echo "Canceled."
+  exit 0
+fi
