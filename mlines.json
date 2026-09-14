@@ -16,6 +16,6 @@
             "type": "shell_script",
             "description": "年やgitのuser.nameとテンプレートからLICENSEを自動生成するツール",
             "path": "license"
-        },
+        }
     }
 }
