@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [ $# -lt 1 ]; then
+    echo "Usage: $(basename "$0") <repository_url>" >&2
+    exit 1
+fi
+
+REPO_URL="$1"
+
+REPO_NAME=$(basename "$REPO_URL" .git)
+
+TARGET_DIR=$(mktemp -d "/tmp/tmprepo-${REPO_NAME}.XXXXXX")
+
+echo "Cloning ${REPO_URL} into ${TARGET_DIR}..."
+
+if git clone --depth 1 "$REPO_URL" "$TARGET_DIR"; then
+    EDITOR_CMD="${TMPR_EDITOR:-code}"
+    
+    echo "Opening in ${EDITOR_CMD}..."
+    
+    if [[ "$EDITOR_CMD" == "vim" || "$EDITOR_CMD" == "nano" || "$EDITOR_CMD" == "vi" ]]; then
+        "$EDITOR_CMD" "$TARGET_DIR"
+    else
+        "$EDITOR_CMD" "$TARGET_DIR" &
+    fi
+else
+    echo "Error: Failed to clone repository." >&2
+    rm -rf "$TARGET_DIR"
+    exit 1
+fi
