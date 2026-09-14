@@ -20,13 +20,13 @@ fi
 
 cd "${SCRIPTS_DIR}"
 
-# Find all executable files in scripts/ (handles both macOS and Linux)
+# Find all regular files (excluding hidden files), regardless of executable permissions
 mapfile -t ALL_TOOLS < <(
-    find . -maxdepth 1 -type f \( -perm -100 -o -perm -010 -o -perm -001 \) ! -name '.*' | sed 's|^\./||' | sort
+    find . -maxdepth 1 -type f ! -name '.*' | sed 's|^\./||' | sort
 )
 
 if [[ ${#ALL_TOOLS[@]} -eq 0 ]]; then
-    echo "No executable tools found in scripts/"
+    echo "No tools found in scripts/"
     exit 0
 fi
 
@@ -75,6 +75,11 @@ for tool in "${ALL_TOOLS[@]}"; do
     script_path="${SCRIPTS_DIR}/${tool}"
 
     if [[ -n "${IS_SELECTED["${tool}"]:-}" ]]; then
+        # Ensure the source script has execution permission
+        if [[ ! -x "${script_path}" ]]; then
+            chmod +x "${script_path}"
+        fi
+
         if [[ ! -L "${target_link}" ]]; then
             ln -sf "${script_path}" "${target_link}"
             echo "  + Enabled: ${tool}"
