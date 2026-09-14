@@ -5,7 +5,6 @@ BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${BIN_DIR}/.." && pwd)"
 SCRIPTS_DIR="${REPO_ROOT}/scripts"
 
-# Command: update
 if [[ "${1:-}" == "update" ]]; then
     echo "Updating repository..."
     git -C "${REPO_ROOT}" pull origin "$(git -C "${REPO_ROOT}" rev-parse --abbrev-ref HEAD)"
@@ -20,7 +19,6 @@ fi
 
 cd "${SCRIPTS_DIR}"
 
-# Find all regular files (excluding hidden files), regardless of executable permissions
 mapfile -t ALL_TOOLS < <(
     find . -maxdepth 1 -type f ! -name '.*' | sed 's|^\./||' | sort
 )

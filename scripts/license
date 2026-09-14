@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+YEAR="${1:-$(date +%Y)}"
+HOLDER="${2:-$(git config user.name 2>/dev/null || echo "Your Name")}"
+OUTPUT_FILE="LICENSE"
+
+for cmd in curl jq fzf; do
+  command -v "$cmd" &>/dev/null || { echo "Error: '$cmd' is required." >&2; exit 1; }
+done
+
+if [[ -f "$OUTPUT_FILE" ]]; then
+  read -rp "'$OUTPUT_FILE' already exists. Overwrite? [y/N]: " confirm
+  [[ "$confirm" =~ ^[Yy]$ ]] || { echo "Aborted."; exit 0; }
+fi
+
+echo "Fetching licenses..."
+LICENSES=$(curl -s -f -H "Accept: application/vnd.github.v3+json" "https://api.github.com/licenses")
+KEY=$(echo "$LICENSES" | jq -r '.[] | "\(.key): \(.name)"' | fzf --prompt="Select License > " | cut -d':' -f1)
+
+[[ -z "$KEY" ]] && { echo "Canceled."; exit 0; }
+
+BODY=$(curl -s -f -H "Accept: application/vnd.github.v3+json" "https://api.github.com/licenses/$KEY" | jq -r '.body')
+
+BODY=$(echo "$BODY" \
+  | sed "s/\[year\]/$YEAR/g; s/\[yyyy\]/$YEAR/g" \
+  | sed "s/\[fullname\]/$HOLDER/g; s/\[name of copyright owner\]/$HOLDER/g")
+
+echo "$BODY" > "$OUTPUT_FILE"
+echo "Generated '$OUTPUT_FILE' ($KEY / $YEAR / $HOLDER)"
