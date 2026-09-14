@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# DESCRIPTION: direnvとdevboxを同時にセットアップするだけのショートカット
+
+devbox init
+devbox generate direnv
