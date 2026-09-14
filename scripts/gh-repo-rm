@@ -26,12 +26,13 @@ selected_items=$(echo "$formatted_list" \
     --layout=reverse \
     --border \
     --header="[Tab] Select/Deselect / [Enter] Confirm" \
+    --query "[EMPTY]" \
     --preview-window="right:50%:wrap" \
     --preview="
       name=\$(echo {} | sed 's/^\[EMPTY\] //')
       echo '$repo_json' | jq -r --arg name \"\$name\" '.[] | select(.nameWithOwner == \$name) | \"■ Description\\\\n\\\\n\" + (.description // \"(No description)\")'
     " \
-    --bind "load:execute-silent(echo '[EMPTY]')+change-query+select-all+clear-query")
+    --bind "load:select-all+clear-query")
 
 if [ -z "$selected_items" ]; then
   echo "Canceled."
