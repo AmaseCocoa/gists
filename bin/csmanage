@@ -28,6 +28,13 @@ if [[ ${#ALL_TOOLS[@]} -eq 0 ]]; then
     exit 0
 fi
 
+get_description() {
+    local tool="$1"
+    local desc
+    desc=$(grep -i '^# *DESCRIPTION:' "${SCRIPTS_DIR}/${tool}" | head -n 1 | sed -E 's/^# *DESCRIPTION: *//i')
+    echo "${desc:-No Description}"
+}
+
 SELECTED=()
 
 if command -v fzf >/dev/null 2>&1; then
@@ -41,7 +48,21 @@ if command -v fzf >/dev/null 2>&1; then
     done < <(
         printf '%s' "${FZF_INPUT}" | fzf --multi \
             --header="Select tools to enable (TAB: select, Enter: confirm)" \
-            --preview="test -L '${BIN_DIR}/{}' && echo '[Enabled]' || echo '[Disabled]'"
+            --preview-window="wrap" \
+            --preview="
+                tool='{}'
+                bin='${BIN_DIR}/{}'
+                script='${SCRIPTS_DIR}/{}'
+
+                if test -L \"\$bin\"; then
+                    echo 'Status: [Enabled]'
+                else
+                    echo 'Status: [Disabled]'
+                fi
+                echo '----------------------------------------'
+                echo -n 'Description: '
+                grep -i '^# *DESCRIPTION:' \"\$script\" | head -n 1 | sed -E 's/^# *DESCRIPTION: *//i' || echo '説明なし'
+            "
     )
 else
     echo "fzf not found. Falling back to basic selection."
@@ -50,7 +71,8 @@ else
     for i in "${!ALL_TOOLS[@]}"; do
         status="[ ]"
         [[ -L "${BIN_DIR}/${ALL_TOOLS[$i]}" ]] && status="[x]"
-        echo "  $((i+1))) ${status} ${ALL_TOOLS[$i]}"
+        desc=$(get_description "${ALL_TOOLS[$i]}")
+        echo "  $((i+1))) ${status} ${ALL_TOOLS[$i]} - ${desc}"
     done
 
     read -rp "Selection: " -a INDEXES
@@ -73,7 +95,6 @@ for tool in "${ALL_TOOLS[@]}"; do
     script_path="${SCRIPTS_DIR}/${tool}"
 
     if [[ -n "${IS_SELECTED["${tool}"]:-}" ]]; then
-        # Ensure the source script has execution permission
         if [[ ! -x "${script_path}" ]]; then
             chmod +x "${script_path}"
         fi

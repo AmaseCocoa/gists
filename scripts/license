@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# DESCRIPTION: 年やgitのuser.nameとテンプレートからLICENSEを自動生成するツール
 
 set -euo pipefail
 
