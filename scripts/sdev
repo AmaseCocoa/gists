@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+PROJECTS_DIR="$HOME/dev/projects"
+EDITOR="${EDITOR:-code}"
+
+mkdir -p "$PROJECTS_DIR"
+
+projects=$(find "$PROJECTS_DIR" -maxdepth 1 -mindepth 1 -type d -exec basename {} \; | sort)
+
+exit_fzf=$(echo "$projects" | fzf \
+    --print-query \
+    --header="[Enter] Select/Create | [ESC] Cancel" \
+    --height=40% \
+    --layout=reverse \
+    --border)
+
+if [ -z "$exit_fzf" ]; then
+    echo "Canceled."
+    exit 0
+fi
+
+IFS=$'\n' read -r -d '' -a fzf_result <<< "$exit_fzf" || true
+unset IFS
+
+query="${fzf_result:-}"
+selected="${fzf_result:-}"
+
+if [ -n "$selected" ]; then
+    TARGET_DIR="$PROJECTS_DIR/$selected"
+else
+    if [ -z "$query" ]; then
+        echo "No name specified."
+        exit 1
+    fi
+    
+    TARGET_DIR="$PROJECTS_DIR/$query"
+    
+    if [ -d "$TARGET_DIR" ]; then
+        echo "Directory already exists. Opening..."
+    else
+        read -p "Create new project '$query'? [y/N]: " confirm
+        if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+            echo "Canceled."
+            exit 0
+        fi
+
+        echo "Creating '$query'..."
+        mkdir -p "$TARGET_DIR"
+        cd "$TARGET_DIR"
+        
+        devbox init
+        devbox generate direnv
+    fi
+fi
+
+cd "$TARGET_DIR"
+exec "$EDITOR" .
