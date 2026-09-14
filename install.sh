@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_URL="https://github.com/AmaseCocoa/cocoa-useful-scripts.git"
+REPO_URL="https://github.com/AmaseCocoa/gists.git"
 INSTALL_DIR="${HOME}/.local/share/cocoa-useful-scripts"
 
 echo "Bootstrapping tools repository..."
