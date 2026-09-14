@@ -21,6 +21,11 @@
             "type": "shell_script",
             "description": "リポジトリを/tmpにcloneしてエディタで開くだけのツール",
             "path": "tmprepo"
+        },
+        "gh-repo-rm": {
+            "type": "shell_script",
+            "description": "GitHubのリポジトリを一括削除するツール",
+            "path": "gh-repo-rm"
         }
     }
 }
