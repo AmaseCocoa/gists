@@ -12,6 +12,11 @@
             "description": "direnvとdevboxを同時にセットアップするだけのショートカット",
             "path": "dvi"
         },
+        "cls": {
+            "type": "shell_script",
+            "description": "ファイルなどの場合はcat、ディレクトリの場合はlsを実行してくれるエイリアス",
+            "path": "cls"
+        },
         "license": {
             "type": "shell_script",
             "description": "年やgitのuser.nameとテンプレートからLICENSEを自動生成するツール",
