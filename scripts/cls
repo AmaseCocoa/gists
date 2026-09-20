@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+if [ -f "$1" ]; then
+    cat "$1"
+elif [ -d "$1" ]; then
+    ls "$1"
+else
+    cat "$1"
+fi
