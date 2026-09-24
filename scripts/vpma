@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ]; then
+    echo "Usage: $0 \"vcc://vpm/addRepo?url=https://example.com/vpm.json\""
+    exit 1
+fi
+
+raw_url="${1#*url=}"
+
+if command -v python3 &> /dev/null; then
+    final_url=$(python3 -c "import sys, urllib.parse; print(urllib.parse.unquote(sys.argv[1]))" "$raw_url")
+else
+    final_url="$raw_url"
+fi
+
+vrc-get repo add "$final_url"

@@ -7,6 +7,11 @@
             "description": "gitignoreを自動生成するscript",
             "path": "gi"
         },
+        "vpma": {
+            "type": "shell_script",
+            "description": "vcc://vpm/addRepo形式のurlからそのままvrc-get repo addするエイリアス",
+            "path": "vpma"
+        },
         "dvi": {
             "type": "shell_script",
             "description": "direnvとdevboxを同時にセットアップするだけのショートカット",
