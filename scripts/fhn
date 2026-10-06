@@ -1,31 +1,31 @@
 #!/bin/bash
 
-CONFIG_FILE="\$HOME/.config/fhn.txt"
+CONFIG_FILE="$HOME/.config/fhn.txt"
 
-if [ ! -f "\$CONFIG_FILE" ]; then
-  mkdir -p "(dirname "CONFIG_FILE")"
-  cat << 'EOF' > "\$CONFIG_FILE"
+if [ ! -f "$CONFIG_FILE" ]; then
+  mkdir -p "$(dirname "$CONFIG_FILE")"
+  cat << EOF > "$CONFIG_FILE"
 $(hostname -s)
 EOF
-  echo "Created initial config file at: \$CONFIG_FILE"
+  echo "Created initial config file at: $CONFIG_FILE"
 fi
 
-TARGET_HOST=\$(fzf --prompt="Select New Host Name > " < "\$CONFIG_FILE")
+TARGET_HOST=$(fzf --prompt="Select New Host Name > " < "$CONFIG_FILE")
 
-if [ -z "\$TARGET_HOST" ]; then
+if [ -z "$TARGET_HOST" ]; then
   echo "Cancelled."
   exit 1
 fi
 
-echo "Changing host name to: \$TARGET_HOST"
+echo "Changing host name to: $TARGET_HOST"
 
-sudo scutil --set ComputerName "\$TARGET_HOST"
-sudo scutil --set HostName "\$TARGET_HOST"
-sudo scutil --set LocalHostName "\$TARGET_HOST"
+sudo scutil --set ComputerName "$TARGET_HOST"
+sudo scutil --set HostName "$TARGET_HOST"
+sudo scutil --set LocalHostName "$TARGET_HOST"
 
 echo ""
 echo "--- Updated Host Info ---"
-echo "ComputerName:  \$(scutil --get ComputerName)"
-echo "HostName:      \$(scutil --get HostName)"
-echo "LocalHostName: \$(scutil --get LocalHostName)"
+echo "ComputerName:  $(scutil --get ComputerName)"
+echo "HostName:      $(scutil --get HostName)"
+echo "LocalHostName: $(scutil --get LocalHostName)"
 echo "-------------------------"
