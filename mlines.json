@@ -7,6 +7,11 @@
             "description": "gitignoreを自動生成するscript",
             "path": "gi"
         },
+        "fhn": {
+            "type": "shell_script",
+            "description": "(macOS only) hostnameを簡単に切り替える謎script",
+            "path": "fhn"
+        },
         "vpma": {
             "type": "shell_script",
             "description": "vcc://vpm/addRepo形式のurlからそのままvrc-get repo addするエイリアス",
